@@ -1,0 +1,21 @@
+<group name="webapp,dvwa,attack,">
+
+  <rule id="100100" level="10">
+    <decoded_as>web-accesslog</decoded_as>
+    <match>UNION|SELECT|union|select</match>
+    <description>Possible SQL Injection attempt on DVWA</description>
+  </rule>
+
+  <rule id="100101" level="10">
+    <decoded_as>web-accesslog</decoded_as>
+    <match>&lt;script&gt;|%3Cscript%3E</match>
+    <description>Possible XSS attempt on DVWA</description>
+  </rule>
+
+  <rule id="100102" level="7">
+    <decoded_as>web-accesslog</decoded_as>
+    <match>.php</match>
+    <description>Possible suspicious PHP file upload/access attempt</description>
+  </rule>
+
+</group>
