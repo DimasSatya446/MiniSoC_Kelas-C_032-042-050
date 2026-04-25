@@ -13,7 +13,7 @@ Panduan cepat untuk mulai menggunakan Mini SOC dalam 5 menit.
 
 ### 1. Navigate to Project Directory
 ```bash
-cd c:\Users\Abiyyu\Documents\Coding\SOC\MiniSOC\MiniSoC_Kelas-C_032-042-050
+cd ...\MiniSoC_Kelas-C_032-042-050
 ```
 
 ### 2. Start All Services

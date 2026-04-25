@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ==========================================
   # DVWA - Damn Vulnerable Web Application
@@ -53,6 +51,8 @@ services:
   wazuh-manager:
     image: wazuh/wazuh:${WAZUH_VERSION:-4.7.0}
     container_name: wazuh-manager
+    environment:-manager-single:4.7.0
+    container_name: wazuh-manager
     environment:
       - INDEXER_URL=https://wazuh-indexer:9200
       - INDEXER_USERNAME=admin
@@ -62,11 +62,13 @@ services:
       - SSL_CERTIFICATE=/etc/ssl/certs/wazuh.crt
       - SSL_KEY=/etc/ssl/private/wazuh.key
       - TZ=${TZ:-UTC}
+      - WAZUH_API_HTTPS_ENABLED=true
     ports:
       - "1514:1514"
       - "1515:1515"
       - "514:514/udp"
       - "9300:9300"
+      - "55000:55000"
     volumes:
       - wazuh-api-logs:/var/ossec/logs
       - wazuh-etc:/var/ossec/etc
@@ -80,24 +82,22 @@ services:
       - soc-network
     restart: unless-stopped
     depends_on:
-      - wazuh-indexer
+      wazuh-indexer:
+        condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:55000/version"]
-      interval: 15s
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "curl", "-f", "-u", "wazuh:wazuh", "https://localhost:55000/version", "-k"]
+      interval: 30
 
   # ==========================================
   # Wazuh Indexer - Log Storage & Indexing
   # ==========================================
-  wazuh-indexer:
-    image: wazuh/wazuh-indexer:${WAZUH_VERSION:-4.7.0}
+  wazuh-indexer:-single:4.7.0
     container_name: wazuh-indexer
     environment:
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - INDEXER_SECURITY_SSL_HTTP_ENABLED=true
-      - INDEXER_SECURITY_SSL_HTTP_PEMCERT_FILE=/etc/ssl/certs/wazuh.crt
-      - INDEXER_SECURITY_SSL_HTTP_PEMKEY_FILE=/etc/ssl/private/wazuh.key
+      - INDEXER_SECURITY_SSL_HTTP_PEMCERT_FILE=/etc/ssl/certs/ca.crt
+      - INDEXER_SECURITY_SSL_HTTP_PEMKEY_FILE=/etc/ssl/private/ca.key
       - INDEXER_SECURITY_SSL_HTTP_PEMKEY_PASSWORD=SecurePassword123!
       - INDEXER_NAME=node-1
       - CLUSTER_NAME=wazuh-cluster
@@ -113,15 +113,13 @@ services:
       memlock: -1
     healthcheck:
       test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "-k", "https://localhost:9200"]
+      interval: 30, "curl", "-f", "-u", "admin:SecurePassword123!", "-k", "https://localhost:9200"]
       interval: 15s
       timeout: 10s
       retries: 3
 
   # ==========================================
-  # Wazuh Dashboard - Visualization & Analysis
-  # ==========================================
-  wazuh-dashboard:
-    image: wazuh/wazuh-dashboard:${WAZUH_VERSION:-4.7.0}
+  # Wazuh Dashboard - Visualizat-single:4.7.0
     container_name: wazuh-dashboard
     environment:
       - INDEXER_USERNAME=admin
@@ -130,16 +128,23 @@ services:
       - WAZUH_API_PORT=55000
       - WAZUH_API_USERNAME=wazuh
       - WAZUH_API_PASSWORD=wazuh
+      - DASHBOARD_USERNAME=admin
+      - DASHBOARD_PASSWORD=SecurePassword123!
     ports:
       - "${WAZUH_DASHBOARD_PORT:-5601}:5601"
     volumes:
       - wazuh-dashboard-config:/usr/share/wazuh-dashboard/config
     depends_on:
-      - wazuh-indexer
-      - wazuh-manager
+      wazuh-indexer:
+        condition: service_started
+      wazuh-manager:
+        condition: service_started
     networks:
       - soc-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "https://localhost:5601/api/status", "-k"]
+      interval: 30s-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
       interval: 15s
