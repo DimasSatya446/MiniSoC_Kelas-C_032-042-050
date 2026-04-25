@@ -1,7 +1,4 @@
 services:
-  # ==========================================
-  # DVWA - Damn Vulnerable Web Application
-  # ==========================================
   dvwa:
     image: vulnerables/web-dvwa:latest
     container_name: soc-dvwa
@@ -15,15 +12,7 @@ services:
     networks:
       - soc-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/login.php"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
-  # ==========================================
-  # Nginx - Reverse Proxy & Log Collection
-  # ==========================================
   nginx:
     image: nginx:alpine
     container_name: soc-nginx
@@ -31,11 +20,11 @@ services:
       - "${NGINX_PORT:-80}:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d
       - nginx-logs:/var/log/nginx
     depends_on:
       dvwa:
-        condition: service_healthy
+        condition: service_started
     networks:
       - soc-network
     restart: unless-stopped
@@ -45,24 +34,15 @@ services:
       timeout: 5s
       retries: 3
 
-  # ==========================================
-  # Wazuh Manager - Analysis & Rules Engine
-  # ==========================================
   wazuh-manager:
-    image: wazuh/wazuh:${WAZUH_VERSION:-4.7.0}
-    container_name: wazuh-manager
-    environment:-manager-single:4.7.0
+    image: wazuh/wazuh-manager:4.7.0
     container_name: wazuh-manager
     environment:
-      - INDEXER_URL=https://wazuh-indexer:9200
+      - INDEXER_URL=http://wazuh-indexer:9200
       - INDEXER_USERNAME=admin
       - INDEXER_PASSWORD=SecurePassword123!
-      - FILEBEAT_SSL_VERIFICATION_MODE=full
-      - SSL_CERTIFICATE_AUTHORITIES=/etc/ssl/certs/ca.crt
-      - SSL_CERTIFICATE=/etc/ssl/certs/wazuh.crt
-      - SSL_KEY=/etc/ssl/private/wazuh.key
       - TZ=${TZ:-UTC}
-      - WAZUH_API_HTTPS_ENABLED=true
+      - WAZUH_API_HTTPS_ENABLED=false
     ports:
       - "1514:1514"
       - "1515:1515"
@@ -71,12 +51,11 @@ services:
       - "55000:55000"
     volumes:
       - wazuh-api-logs:/var/ossec/logs
-      - wazuh-etc:/var/ossec/etc
       - wazuh-queue:/var/ossec/queue
       - wazuh-integrations:/var/ossec/integrations
       - wazuh-active-response:/var/ossec/active-response/bin
       - wazuh-ruleset:/var/ossec/ruleset
-      - ./wazuh/rules/custom_rules.xml:/var/ossec/etc/rules/custom_rules.xml:ro
+      # - ./wazuh/rules/custom_rules.xml:/var/ossec/etc/rules/custom_rules.xml:ro
       - wazuh-backup:/var/ossec/backup
     networks:
       - soc-network
@@ -85,20 +64,17 @@ services:
       wazuh-indexer:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "-u", "wazuh:wazuh", "https://localhost:55000/version", "-k"]
-      interval: 30
+      test: ["CMD", "curl", "-f", "-u", "wazuh:wazuh", "http://localhost:55000/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # ==========================================
-  # Wazuh Indexer - Log Storage & Indexing
-  # ==========================================
-  wazuh-indexer:-single:4.7.0
+  wazuh-indexer:
+    image: wazuh/wazuh-indexer:4.7.0
     container_name: wazuh-indexer
     environment:
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-      - INDEXER_SECURITY_SSL_HTTP_ENABLED=true
-      - INDEXER_SECURITY_SSL_HTTP_PEMCERT_FILE=/etc/ssl/certs/ca.crt
-      - INDEXER_SECURITY_SSL_HTTP_PEMKEY_FILE=/etc/ssl/private/ca.key
-      - INDEXER_SECURITY_SSL_HTTP_PEMKEY_PASSWORD=SecurePassword123!
+      - INDEXER_SECURITY_SSL_HTTP_ENABLED=false
       - INDEXER_NAME=node-1
       - CLUSTER_NAME=wazuh-cluster
       - DISCOVERY_TYPE=single-node
@@ -112,20 +88,19 @@ services:
     ulimits:
       memlock: -1
     healthcheck:
-      test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "-k", "https://localhost:9200"]
-      interval: 30, "curl", "-f", "-u", "admin:SecurePassword123!", "-k", "https://localhost:9200"]
+      test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "http://localhost:9200"]
       interval: 15s
       timeout: 10s
       retries: 3
 
-  # ==========================================
-  # Wazuh Dashboard - Visualizat-single:4.7.0
+  wazuh-dashboard:
+    image: wazuh/wazuh-dashboard:4.7.0
     container_name: wazuh-dashboard
     environment:
-      - INDEXER_USERNAME=admin
-      - INDEXER_PASSWORD=SecurePassword123!
-      - WAZUH_API_URL=https://wazuh-manager
-      - WAZUH_API_PORT=55000
+      - OPENSEARCH_HOSTS=http://wazuh-indexer:9200
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=SecurePassword123!
+      - WAZUH_API_URL=http://wazuh-manager:55000
       - WAZUH_API_USERNAME=wazuh
       - WAZUH_API_PASSWORD=wazuh
       - DASHBOARD_USERNAME=admin
@@ -143,17 +118,11 @@ services:
       - soc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "https://localhost:5601/api/status", "-k"]
-      interval: 30s-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
+      test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "http://localhost:5601/api/status"]
       interval: 15s
       timeout: 10s
       retries: 3
 
-  # ==========================================
-  # Filebeat - Log Forwarder to Wazuh
-  # ==========================================
   filebeat:
     image: docker.elastic.co/beats/filebeat:${FILEBEAT_VERSION:-8.11.0}
     container_name: soc-filebeat
@@ -174,34 +143,18 @@ services:
     restart: unless-stopped
     command: filebeat -e -strict.perms=false
 
-# ==========================================
-# Networks
-# ==========================================
 networks:
   soc-network:
     driver: bridge
 
-# ==========================================
-# Volumes
-# ==========================================
 volumes:
   nginx-logs:
-    driver: local
   wazuh-api-logs:
-    driver: local
   wazuh-etc:
-    driver: local
   wazuh-queue:
-    driver: local
   wazuh-integrations:
-    driver: local
   wazuh-active-response:
-    driver: local
   wazuh-ruleset:
-    driver: local
   wazuh-backup:
-    driver: local
   wazuh-indexer-data:
-    driver: local
   wazuh-dashboard-config:
-    driver: local
