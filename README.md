@@ -108,9 +108,9 @@ docker-compose logs -f wazuh-manager
 - **DVWA**: http://localhost:8080
   - Username: `admin`
   - Password: `password`
-- **Wazuh Dashboard**: https://localhost:5601
+- **Wazuh Dashboard**: https://localhost:443
   - Username: `admin`
-  - Password: `SecurePassword123!`
+  - Password: `SecretPassword`
 
 ## 📖 Project Structure
 
@@ -191,7 +191,7 @@ Payload: <script>alert('XSS')</script>
 
 ### Monitor di Dashboard
 
-1. Buka Wazuh Dashboard: https://localhost:5601
+1. Buka Wazuh Dashboard: https://localhost:443
 2. Navigate ke "Security Events"
 3. Filter by Rule: SQL Injection, XSS, File Upload
 4. Analisis source IP, timestamp, payload
@@ -282,7 +282,7 @@ docker-compose up -d --build
 docker-compose exec wazuh-manager systemctl status wazuh-manager
 
 # Check Indexer
-docker-compose exec wazuh-indexer curl -u admin:SecurePassword123! https://localhost:9200 -k
+docker-compose exec wazuh-indexer curl -u admin:SecretPassword https://localhost:9200 -k
 ```
 
 ### Logs tidak masuk ke Wazuh

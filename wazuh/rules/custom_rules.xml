@@ -33,9 +33,9 @@ Last Updated: 2026-04-25
        Impact: Database query manipulation, unauthorized data access
   -->
   <rule id="100100" level="10">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>UNION|SELECT|union|select</match>
-    <description>Possible SQL Injection attempt on DVWA</description>
+    <if_sid>31100, 31103</if_sid>
+    <pcre2>(?i)union|select|union\s+select</pcre2>
+    <description>Possible SQL Injection attempt on DVWA (Custom Rule)</description>
   </rule>
 
   <!-- Rule 100101: SQL Injection - OR-based Injection
@@ -44,8 +44,8 @@ Last Updated: 2026-04-25
        Impact: Authentication bypass
   -->
   <rule id="100101" level="10">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>' OR | OR '| OR 1| 1'=1</match>
+    <if_sid>31100</if_sid>
+    <pcre2>(?i)'\s+OR\s+|OR\s+'|OR\s+1|1'=1</pcre2>
     <description>Possible SQL Injection - OR-based authentication bypass attempt</description>
   </rule>
 
@@ -53,8 +53,8 @@ Last Updated: 2026-04-25
        Detects advanced SQLi methods like UNION SELECT, comments, etc.
   -->
   <rule id="100102" level="10">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>UNION.*SELECT|SELECT.*FROM|-- |;DROP|;DELETE|;UPDATE</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)union.*select|select.*from|-- |;DROP|;DELETE|;UPDATE</regex>
     <description>Possible advanced SQL Injection attempt detected</description>
   </rule>
 
@@ -62,9 +62,9 @@ Last Updated: 2026-04-25
        Detects SQL errors indicating injection vulnerability discovery
   -->
   <rule id="100103" level="9">
-    <decoded_as>web-accesslog</decoded_as>
+    <if_sid>31100</if_sid>
     <status>500</status>
-    <match>SQL|mysql|syntax|database</match>
+    <regex>(?i)sql|mysql|syntax|database</regex>
     <description>Possible SQL error-based injection attempt detected</description>
   </rule>
 
@@ -77,8 +77,8 @@ Last Updated: 2026-04-25
        Impact: Session hijacking, credential theft, malware injection
   -->
   <rule id="100200" level="10">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>&lt;script&gt;|%3Cscript%3E|&lt;/script&gt;|%3C/script%3E</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)&lt;script&gt;|%3Cscript%3E|&lt;/script&gt;|%3C/script%3E</regex>
     <description>Possible XSS attempt - Script tag detected in DVWA</description>
   </rule>
 
@@ -87,8 +87,8 @@ Last Updated: 2026-04-25
        Payload example: <img src=x onerror="alert('XSS')">
   -->
   <rule id="100201" level="10">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>onerror|onclick|onload|onmouseover|onmouseout</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)onerror|onclick|onload|onmouseover|onmouseout</regex>
     <description>Possible XSS attempt - Event handler detected</description>
   </rule>
 
@@ -97,8 +97,8 @@ Last Updated: 2026-04-25
        Payload example: <a href="javascript:alert()">
   -->
   <rule id="100202" level="10">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>javascript:|vbscript:|data:text/html</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)javascript:|vbscript:|data:text/html</regex>
     <description>Possible XSS attempt - JavaScript protocol detected</description>
   </rule>
 
@@ -107,8 +107,8 @@ Last Updated: 2026-04-25
        Examples: &#60;script&#62;, &#x3C;script&#x3E;
   -->
   <rule id="100203" level="9">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>&#\d+;|&#x[0-9a-fA-F]+;</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)&#\d+;|&#x[0-9a-fA-F]+;</regex>
     <description>Possible encoded XSS attempt detected</description>
   </rule>
 
@@ -121,9 +121,9 @@ Last Updated: 2026-04-25
        Impact: Remote code execution (RCE)
   -->
   <rule id="100300" level="10">
-    <decoded_as>web-accesslog</decoded_as>
+    <if_sid>31100</if_sid>
     <url>/vulnerabilities/upload/</url>
-    <match>.php|.phtml|.php5|.phar</match>
+    <regex>(?i)\.php|\.phtml|\.php5|\.phar</regex>
     <description>Possible PHP file upload attempt on DVWA - RCE risk</description>
   </rule>
 
@@ -131,7 +131,7 @@ Last Updated: 2026-04-25
        Detects direct access to uploaded PHP files
   -->
   <rule id="100301" level="7">
-    <decoded_as>web-accesslog</decoded_as>
+    <if_sid>31100</if_sid>
     <match>.php</match>
     <description>Suspicious PHP file access detected</description>
   </rule>
@@ -140,8 +140,8 @@ Last Updated: 2026-04-25
        Detects upload attempts of executable files (.exe, .sh, .bat, etc.)
   -->
   <rule id="100302" level="9">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>.exe|.bin|.sh|.bat|.cmd|.scr</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)\.exe|\.bin|\.sh|\.bat|\.cmd|\.scr</regex>
     <description>Possible executable file upload attempt detected</description>
   </rule>
 
@@ -154,7 +154,7 @@ Last Updated: 2026-04-25
        Threshold: 5 failed attempts within 5 minutes
   -->
   <rule id="100400" level="10">
-    <decoded_as>web-accesslog</decoded_as>
+    <if_sid>31100</if_sid>
     <url>/vulnerabilities/brute/</url>
     <status>401|403</status>
     <frequency>5 in 5m</frequency>
@@ -168,7 +168,7 @@ Last Updated: 2026-04-25
        Threshold: 10 attempts within 1 minute
   -->
   <rule id="100401" level="9">
-    <decoded_as>web-accesslog</decoded_as>
+    <if_sid>31100</if_sid>
     <url>/vulnerabilities/brute/</url>
     <frequency>10 in 1m</frequency>
     <timeframe>60</timeframe>
@@ -185,7 +185,7 @@ Last Updated: 2026-04-25
        Threshold: 50 requests within 1 minute
   -->
   <rule id="100500" level="8">
-    <decoded_as>web-accesslog</decoded_as>
+    <if_sid>31100</if_sid>
     <frequency>50 in 1m</frequency>
     <timeframe>60</timeframe>
     <same_source_ip>yes</same_source_ip>
@@ -196,8 +196,8 @@ Last Updated: 2026-04-25
        Detects common scanning and exploitation tools
   -->
   <rule id="100501" level="7">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>sqlmap|nikto|nmap|masscan|metasploit|burp|owasp|zaproxy</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)sqlmap|nikto|nmap|masscan|metasploit|burp|owasp|zaproxy</regex>
     <description>Possible web scanner/attack tool detected via User-Agent</description>
   </rule>
 
@@ -206,8 +206,8 @@ Last Updated: 2026-04-25
        Payload example: /../../etc/passwd, /..\\..\\windows\\
   -->
   <rule id="100502" level="9">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>\.\./|\.\.\\|\.\.%2f|\.\.%5c|%2e%2e|\.\.\.\.\/</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)\.\./|\.\.\\|\.\.%2f|\.\.%5c|%2e%2e|\.\.\.\.\/</regex>
     <description>Possible directory traversal attack detected</description>
   </rule>
 
@@ -219,8 +219,8 @@ Last Updated: 2026-04-25
        Detects shell metacharacters used in command injection
   -->
   <rule id="100600" level="10">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>;whoami|;cat|;ls|;id|`whoami`|$(whoami)|;nc|;bash|;sh</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i);whoami|;cat|;ls|;id|`whoami`|\$\(whoami\)|;nc|;bash|;sh</regex>
     <description>Possible OS command injection attempt detected</description>
   </rule>
 
@@ -228,8 +228,8 @@ Last Updated: 2026-04-25
        Detects shell control characters that could indicate injection
   -->
   <rule id="100601" level="8">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>%3B|%26|%7C|%24%28|%60|%26%26|%7C%7C</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)%3B|%26|%7C|%24%28|%60|%26%26|%7C%7C</regex>
     <description>Possible command injection - Shell metacharacters detected</description>
   </rule>
 
@@ -268,9 +268,9 @@ Last Updated: 2026-04-25
        Detects database error messages which disclose system information
   -->
   <rule id="100800" level="7">
-    <decoded_as>web-accesslog</decoded_as>
+    <if_sid>31100</if_sid>
     <status>500</status>
-    <match>mysql_fetch|mysql_error|mysqli|pdo.*error</match>
+    <regex>(?i)mysql_fetch|mysql_error|mysqli|pdo.*error</regex>
     <description>Possible information disclosure - Database error exposed</description>
   </rule>
 
@@ -278,8 +278,8 @@ Last Updated: 2026-04-25
        Detects attempts to access sensitive/hidden directories
   -->
   <rule id="100801" level="7">
-    <decoded_as>web-accesslog</decoded_as>
-    <match>.git/|.svn/|.env|config.php|database.php|settings.ini</match>
+    <if_sid>31100</if_sid>
+    <regex>(?i)\.git/|\.svn/|\.env|config\.php|database\.php|settings\.ini</regex>
     <description>Possible information disclosure - Sensitive file access attempt</description>
   </rule>
 

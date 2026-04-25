@@ -1,0 +1,47 @@
+network.host: "0.0.0.0"
+
+node.name: "wazuh.indexer"
+cluster.initial_cluster_manager_nodes:
+  - "wazuh.indexer"
+
+cluster.name: "wazuh-cluster"
+discovery.type: single-node
+
+# HTTP layer SSL
+plugins.security.ssl.http.pemcertfile: "/usr/share/wazuh-indexer/certs/wazuh.indexer.pem"
+plugins.security.ssl.http.pemkeyfile: "/usr/share/wazuh-indexer/certs/wazuh.indexer-key.pem"
+plugins.security.ssl.http.pemtrustedcas_filepath: "/usr/share/wazuh-indexer/certs/root-ca.pem"
+plugins.security.ssl.http.enabled: true
+
+# Transport layer SSL (server side)
+plugins.security.ssl.transport.server.pemcert_filepath: "/usr/share/wazuh-indexer/certs/wazuh.indexer.pem"
+plugins.security.ssl.transport.server.pemkey_filepath: "/usr/share/wazuh-indexer/certs/wazuh.indexer-key.pem"
+plugins.security.ssl.transport.server.pemtrustedcas_filepath: "/usr/share/wazuh-indexer/certs/root-ca.pem"
+
+# Transport layer SSL (client side)
+plugins.security.ssl.transport.client.pemcert_filepath: "/usr/share/wazuh-indexer/certs/wazuh.indexer.pem"
+plugins.security.ssl.transport.client.pemkey_filepath: "/usr/share/wazuh-indexer/certs/wazuh.indexer-key.pem"
+plugins.security.ssl.transport.client.pemtrustedcas_filepath: "/usr/share/wazuh-indexer/certs/root-ca.pem"
+
+plugins.security.ssl.transport.enforce_hostname_verification: false
+plugins.security.ssl.http.clientauth_mode: OPTIONAL
+
+# OpenSearch Security
+plugins.security.authcz.admin_dn:
+  - "CN=admin,OU=Wazuh,O=Wazuh,L=California,C=US"
+
+plugins.security.nodes_dn:
+  - "CN=wazuh.indexer,OU=Wazuh,O=Wazuh,L=California,C=US"
+
+plugins.security.restapi.roles_enabled:
+  - "all_access"
+  - "security_rest_api_access"
+
+plugins.security.allow_default_init_securityindex: true
+plugins.security.audit.type: internal_opensearch
+plugins.security.enable_snapshot_restore_privilege: true
+plugins.security.check_snapshot_restore_write_privileges: true
+
+# Performance
+path.data: /var/lib/wazuh-indexer
+path.logs: /var/log/wazuh-indexer

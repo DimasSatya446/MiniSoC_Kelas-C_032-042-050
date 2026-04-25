@@ -32,12 +32,31 @@ if not exist "docker-compose.yml" (
 )
 echo [+] docker-compose.yml found
 
+REM Generate SSL certificates if not present
+echo [*] Checking SSL certificates...
+if not exist "config\wazuh_indexer_ssl_certs\root-ca.pem" (
+    echo [!] SSL certificates not found. Generating now...
+    echo     This may take a minute...
+    docker run --rm ^
+      -v "%CD%\config\wazuh_indexer_ssl_certs\:/certificates/" ^
+      -v "%CD%\config\certs.yml:/config/certs.yml" ^
+      wazuh/wazuh-certs-generator:0.0.2
+    if errorlevel 1 (
+        echo [-] Failed to generate SSL certificates!
+        pause
+        exit /b 1
+    )
+    echo [+] SSL certificates generated successfully
+) else (
+    echo [+] SSL certificates already exist
+)
+
 REM Start services
 echo.
-echo [*] Starting all services (this may take 2-3 minutes)...
+echo [*] Starting all services (this may take 3-5 minutes)...
 call docker-compose up -d
 if errorlevel 1 (
-    echo [!] Failed to start services
+    echo [-] Failed to start services
     pause
     exit /b 1
 )
@@ -67,10 +86,10 @@ echo   Username: admin
 echo   Password: password
 echo.
 echo Wazuh Dashboard:
-echo   URL: https://localhost:5601
+echo   URL: https://localhost:443
 echo   Username: admin
-echo   Password: SecurePassword123!
-echo   Note: Accept self-signed certificate warning
+echo   Password: SecretPassword
+echo   Note: Accept the self-signed certificate warning in your browser
 echo.
 echo Nginx Health Check:
 echo   URL: http://localhost/health

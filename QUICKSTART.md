@@ -51,8 +51,8 @@ Open in browser:
    - Login: `admin` / `password`
    - Go to: Vulnerabilities menu
 
-2. **Wazuh Dashboard**: https://localhost:5601
-   - Login: `admin` / `SecurePassword123!`
+2. **Wazuh Dashboard**: https://localhost:443
+   - Login: `admin` / `SecretPassword`
    - Go to: Security Events
 
 ## 🎯 Run Your First Attack (5 minutes)
@@ -86,7 +86,7 @@ curl "http://localhost:8080/vulnerabilities/sqli/?id=1%27%20UNION%20SELECT%20use
 
 ## 📊 See the Alert in Wazuh
 
-1. Go to: https://localhost:5601
+1. Go to: https://localhost:443
 2. Click: **Security Events**
 3. Look for alerts with:
    - Rule ID: 100100 (SQL Injection)
@@ -130,7 +130,7 @@ curl http://localhost:8080
 ### Can't access Wazuh Dashboard
 ```bash
 # Check if Indexer is healthy
-docker-compose exec wazuh-indexer curl -u admin:SecurePassword123! https://localhost:9200 -k
+docker-compose exec wazuh-indexer curl -u admin:SecretPassword https://localhost:9200 -k
 
 # Wait a bit more (takes 2-3 min to fully initialize)
 ```
@@ -194,7 +194,7 @@ docker-compose exec dvwa ls /var/www/html
 | Service | URL | Username | Password |
 |---------|-----|----------|----------|
 | DVWA | http://localhost:8080 | admin | password |
-| Wazuh | https://localhost:5601 | admin | SecurePassword123! |
+| Wazuh | https://localhost:443 | admin | SecretPassword |
 | Nginx Health | http://localhost/health | - | - |
 
 ## 📖 Documentation Structure
