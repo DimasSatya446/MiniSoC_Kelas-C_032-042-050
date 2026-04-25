@@ -17,9 +17,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/login.php"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
   # ==========================================
   # Nginx - Reverse Proxy & Log Collection
@@ -35,7 +36,7 @@ services:
       - nginx-logs:/var/log/nginx
     depends_on:
       dvwa:
-        condition: service_healthy
+        condition: service_started
     networks:
       - soc-network
     restart: unless-stopped
@@ -49,9 +50,7 @@ services:
   # Wazuh Manager - Analysis & Rules Engine
   # ==========================================
   wazuh-manager:
-    image: wazuh/wazuh:${WAZUH_VERSION:-4.7.0}
-    container_name: wazuh-manager
-    environment:-manager-single:4.7.0
+    image: wazuh/wazuh-manager:${WAZUH_VERSION:-4.7.0}
     container_name: wazuh-manager
     environment:
       - INDEXER_URL=https://wazuh-indexer:9200
@@ -86,12 +85,15 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "-u", "wazuh:wazuh", "https://localhost:55000/version", "-k"]
-      interval: 30
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ==========================================
   # Wazuh Indexer - Log Storage & Indexing
   # ==========================================
-  wazuh-indexer:-single:4.7.0
+  wazuh-indexer:
+    image: wazuh/wazuh-indexer:${WAZUH_VERSION:-4.7.0}
     container_name: wazuh-indexer
     environment:
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
@@ -110,16 +112,20 @@ services:
       - soc-network
     restart: unless-stopped
     ulimits:
-      memlock: -1
+      memlock:
+        soft: -1
+        hard: -1
     healthcheck:
       test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "-k", "https://localhost:9200"]
-      interval: 30, "curl", "-f", "-u", "admin:SecurePassword123!", "-k", "https://localhost:9200"]
       interval: 15s
       timeout: 10s
       retries: 3
 
   # ==========================================
-  # Wazuh Dashboard - Visualizat-single:4.7.0
+  # Wazuh Dashboard - Visualization
+  # ==========================================
+  wazuh-dashboard:
+    image: wazuh/wazuh-dashboard:${WAZUH_VERSION:-4.7.0}
     container_name: wazuh-dashboard
     environment:
       - INDEXER_USERNAME=admin
@@ -142,9 +148,6 @@ services:
     networks:
       - soc-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "-u", "admin:SecurePassword123!", "https://localhost:5601/api/status", "-k"]
-      interval: 30s-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
       interval: 15s
