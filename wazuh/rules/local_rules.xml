@@ -1,0 +1,118 @@
+<!-- Custom Rules -->
+<!--
+================================================================================
+Mini SOC - Custom Detection Rules for DVWA
+================================================================================
+
+Description:
+  This rule file contains custom detection patterns for identifying various
+  types of web application attacks targeting DVWA through HTTP requests.
+  
+  Rules are categorized by attack type and severity level.
+  
+  Severity Levels:
+  - 7-8: MEDIUM (investigate within 2 hours)
+  - 9: HIGH (investigate within 30 minutes)
+  - 10: CRITICAL (immediate action required)
+
+Author: Mini SOC Team - Kelas C (032-042-050)
+Created: 2026-04-25
+Last Updated: 2026-04-25
+
+================================================================================
+-->
+<group name="webapp,dvwa,attack,">
+
+  <!-- =====================================================================
+       RULE GROUP 1: SQL INJECTION DETECTION
+       ===================================================================== -->
+
+  <rule id="100100" level="12">
+    <if_sid>31105</if_sid>
+    <url>/vulnerabilities/sqli/</url>
+    <description>DVWA: SQL Injection attempt detected (Refined Rule)</description>
+  </rule>
+
+  <!-- =====================================================================
+       RULE GROUP 2: CROSS-SITE SCRIPTING (XSS) DETECTION
+       ===================================================================== -->
+
+  <rule id="100200" level="12">
+    <if_sid>31102</if_sid>
+    <url>/vulnerabilities/xss_r/|/vulnerabilities/xss_s/|/vulnerabilities/xss_d/</url>
+    <description>DVWA: XSS attempt detected (Refined Rule)</description>
+  </rule>
+
+  <!-- =====================================================================
+       RULE GROUP 3: FILE UPLOAD DETECTION
+       ===================================================================== -->
+
+  <rule id="100300" level="10">
+    <if_sid>31108</if_sid>
+    <url>/vulnerabilities/upload/</url>
+    <protocol>^POST$</protocol>
+    <description>DVWA: File upload attempt detected</description>
+  </rule>
+
+  <!-- =====================================================================
+       RULE GROUP 4: BRUTE FORCE DETECTION
+       ===================================================================== -->
+
+  <!-- Base rule to match any POST to the brute force page -->
+  <rule id="100400" level="3">
+    <if_sid>31108</if_sid>
+    <url>/vulnerabilities/brute/</url>
+    <protocol>^POST$</protocol>
+    <description>DVWA: Login attempt on brute force page</description>
+  </rule>
+
+  <!-- High frequency alert rule -->
+  <rule id="100401" level="12" frequency="5" timeframe="60">
+    <if_matched_sid>100400</if_matched_sid>
+    <same_source_ip />
+    <description>DVWA: Brute force attack detected (Multiple attempts)</description>
+  </rule>
+
+</group>
+
+<!-- 
+================================================================================
+NOTES FOR RULE MANAGEMENT
+================================================================================
+
+1. RULE TESTING:
+   Before deploying new rules to production, test them with:
+   - Manual log injection
+   - Actual attack execution
+   - Verify detection within 1 minute
+   
+2. FALSE POSITIVE MANAGEMENT:
+   - Monitor alert rate
+   - Create exception rules for whitelisted paths
+   - Adjust frequency thresholds if needed
+   
+3. RULE UPDATES:
+   - Update rules when new attack patterns emerge
+   - Review monthly for optimization
+   - Maintain version control of changes
+   
+4. PERFORMANCE CONSIDERATIONS:
+   - Complex regex patterns impact performance
+   - Test on staging first
+   - Monitor Wazuh Manager CPU/memory usage
+   
+5. DOCUMENTATION:
+   - Keep each rule well-documented
+   - Include examples of matching payloads
+   - Note severity justification
+   - List related CVEs if applicable
+
+6. ESCALATION PROCEDURES:
+   Rules with level 10+ should trigger:
+   - Immediate notification to SOC
+   - Incident ID generation
+   - Automated containment (if configured)
+   - Manual investigation required
+
+================================================================================
+-->

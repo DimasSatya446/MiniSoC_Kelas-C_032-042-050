@@ -5,7 +5,12 @@ services:
   dvwa:
     image: vulnerables/web-dvwa:latest
     container_name: soc-dvwa
-    command: /bin/sh -c "sed -i 's/allow_url_include = Off/allow_url_include = On/g' /etc/php/7.0/apache2/php.ini && /usr/local/bin/docker-php-entrypoint apache2-foreground"
+    # Fix: Use entrypoint to ensure PID cleanup and PHP config changes, then run main.sh
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "rm -f /var/run/apache2/apache2.pid && 
+       sed -i 's/allow_url_include = Off/allow_url_include = On/g' /etc/php/7.0/apache2/php.ini && 
+       /main.sh"
     # Ports removed to prevent bypassing Nginx reverse proxy
     # All traffic MUST go through Nginx for logs to be collected by Filebeat
     environment:
@@ -17,7 +22,8 @@ services:
       - soc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/login.php"]
+      # Fix: DVWA image lacks curl/wget. Use grep on /proc/net/tcp to check for port 80 (0050 in hex)
+      test: ["CMD-SHELL", "grep :0050 /proc/net/tcp"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -43,7 +49,8 @@ services:
       - soc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      # Fix: Use 127.0.0.1 instead of localhost to avoid IPv6 issues, and use curl which is available
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -124,8 +131,8 @@ services:
       - ./config/wazuh_indexer_ssl_certs/root-ca-manager.pem:/etc/ssl/root-ca.pem
       - ./config/wazuh_indexer_ssl_certs/wazuh.manager.pem:/etc/ssl/filebeat.pem
       - ./config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem:/etc/ssl/filebeat.key
-      - ./config/wazuh_cluster/wazuh_manager.conf:/wazuh-config-mount/etc/ossec.conf
-      - ./wazuh/rules/custom_rules.xml:/var/ossec/etc/rules/custom_rules.xml:ro
+      - ./config/wazuh_cluster/wazuh_manager.conf:/var/ossec/etc/ossec.conf:ro
+      - ./wazuh/rules/local_rules.xml:/var/ossec/etc/rules/local_rules.xml:ro
       - nginx-logs:/var/log/nginx:ro
     depends_on:
       - wazuh.indexer
