@@ -6,7 +6,7 @@ Panduan cepat untuk mulai menggunakan Mini SOC dalam 5 menit.
 
 - Docker & Docker Compose installed
 - At least 4GB RAM available
-- Port 8080, 5601, 1514-1516 available
+- Port 8080 (DVWA/Nginx), 443 (Dashboard), 1514-1516 (Wazuh) available
 - (On Windows) Run terminal as Administrator
 
 ## ⚡ 5-Minute Setup
@@ -137,14 +137,14 @@ docker-compose exec wazuh-indexer curl -u admin:SecretPassword https://localhost
 
 ### Logs not appearing in Wazuh
 ```bash
-# Check filebeat is sending logs
-docker-compose logs filebeat
+# Check if Manager is reading Nginx logs
+docker-compose exec wazuh-manager grep "access.log" /var/ossec/logs/ossec.log
 
-# Check nginx logs exist
+# Check nginx logs exist inside Manager container
+docker-compose exec wazuh-manager ls -l /var/log/nginx/access.log
+
+# Check nginx container is logging
 docker-compose exec nginx tail /var/log/nginx/access.log
-
-# Restart filebeat
-docker-compose restart filebeat
 ```
 
 ## 🛑 Stop Services

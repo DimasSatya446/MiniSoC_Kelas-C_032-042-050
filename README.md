@@ -43,9 +43,9 @@ Mini SOC ini dirancang sebagai lab pembelajaran untuk memahami:
              │
              ▼
 ┌─────────────────────────────────────────────────┐
-│  Log Collection & Aggregation                   │
-│  - Filebeat (collect logs)                      │
-│  - Send to Wazuh                                │
+│  Log Collection & Analysis                      │
+│  - Shared Volume (mount Nginx logs to Manager)  │
+│  - Direct Ingestion by Wazuh Manager            │
 └────────────┬────────────────────────────────────┘
              │
              ▼
@@ -74,7 +74,7 @@ Mini SOC ini dirancang sebagai lab pembelajaran untuk memahami:
 ### Prerequisites
 - Docker & Docker Compose
 - Minimum 4GB RAM available
-- Port availability: 8080 (DVWA), 5601 (Dashboard), 1514-1516 (Wazuh)
+- Port availability: 8080 (DVWA/Nginx), 443 (Dashboard), 1514-1516 (Wazuh)
 
 ### Setup & Run
 
@@ -210,7 +210,7 @@ Lihat [docs/incident-response.md](docs/incident-response.md) untuk panduan lengk
    └─> Nginx mencatat request di access.log (complete URL dengan payload)
 
 3. LOG TRANSMISSION
-   └─> Log dikirim ke Wazuh Manager via Filebeat/Agent
+   └─> Log diakses langsung oleh Wazuh Manager melalui Shared Volume
 
 4. RULE MATCHING
    └─> Wazuh engine mencocokkan log dengan custom rules

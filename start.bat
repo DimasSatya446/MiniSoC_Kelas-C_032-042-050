@@ -100,7 +100,7 @@ echo Next steps:
 echo   1. Access DVWA at http://localhost:8080
 echo   2. Set security level (top-right menu) to 'Low' for testing
 echo   3. Run attack scenarios (see docs\attack-scenario.md)
-echo   4. Monitor in Wazuh Dashboard (https://localhost:5601)
+echo   4. Monitor in Wazuh Dashboard (https://localhost:443)
 echo.
 echo Troubleshooting:
 echo   View logs:           docker-compose logs -f
